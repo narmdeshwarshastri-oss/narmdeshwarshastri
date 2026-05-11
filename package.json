@@ -1,7 +1,7 @@
 {
-  "name": "video-call-app",
+  "name": "shastri-ji-connect",
   "version": "1.0.0",
-  "description": "Simple 1-on-1 video call app with screen share",
+  "description": "Shastri Ji Connect - Simple 1-on-1 video call app with screen share",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
