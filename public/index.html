@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Video Call App</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="lobby" class="lobby">
+    <div class="card">
+      <h1>Video Call</h1>
+      <p>एक room ID डालें या नया बनाएँ</p>
+      <input type="text" id="roomInput" placeholder="Room ID (जैसे: my-room-123)" />
+      <button id="joinBtn">Join Room</button>
+      <button id="createBtn">Create New Room</button>
+      <p id="lobbyMsg" class="msg"></p>
+    </div>
+  </div>
+
+  <div id="callArea" class="call-area hidden">
+    <div class="header">
+      <span id="roomLabel"></span>
+      <button id="copyLinkBtn">Copy Link</button>
+    </div>
+    <div class="videos">
+      <div class="video-wrapper">
+        <video id="localVideo" autoplay muted playsinline></video>
+        <span class="label">आप</span>
+      </div>
+      <div class="video-wrapper">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <span class="label">दूसरा user</span>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="muteBtn">Mic Off</button>
+      <button id="cameraBtn">Camera Off</button>
+      <button id="screenBtn">Share Screen</button>
+      <button id="hangupBtn" class="danger">End Call</button>
+    </div>
+    <p id="statusMsg" class="msg"></p>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
