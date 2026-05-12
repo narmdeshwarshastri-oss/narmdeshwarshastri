@@ -2,46 +2,130 @@
 <html lang="hi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#075E54" />
   <title>Shastri Ji Connect</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="lobby" class="lobby">
-    <div class="card">
+
+  <!-- Lobby Screen -->
+  <div id="lobby" class="screen lobby">
+    <div class="lobby-content">
+      <div class="logo-circle">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="white">
+          <path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/>
+        </svg>
+      </div>
       <h1>Shastri Ji Connect</h1>
-      <p class="tagline">Video Call</p>
-      <p>एक room ID डालें या नया बनाएँ</p>
-      <input type="text" id="roomInput" placeholder="Room ID (जैसे: my-room-123)" />
-      <button id="joinBtn">Join Room</button>
-      <button id="createBtn">Create New Room</button>
+      <p class="tagline">Free Video Calling</p>
+
+      <button id="startCallBtn" class="big-btn primary">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
+          <path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/>
+        </svg>
+        <span>नई Call शुरू करें</span>
+      </button>
+
+      <div class="divider"><span>या</span></div>
+
+      <div class="join-section">
+        <p class="hint">किसी ने link भेजा है?</p>
+        <input type="text" id="roomInput" placeholder="Link या Room ID यहाँ paste करें" />
+        <button id="joinBtn" class="big-btn secondary">Call में Join करें</button>
+      </div>
+
       <p id="lobbyMsg" class="msg"></p>
     </div>
   </div>
 
-  <div id="callArea" class="call-area hidden">
-    <div class="header">
-      <span id="roomLabel"></span>
-      <button id="copyLinkBtn">Copy Link</button>
-    </div>
-    <div class="videos">
-      <div class="video-wrapper">
-        <video id="localVideo" autoplay muted playsinline></video>
-        <span class="label">आप</span>
+  <!-- Call Screen -->
+  <div id="callArea" class="screen call-area hidden">
+    <!-- Remote video full screen -->
+    <video id="remoteVideo" class="remote-video" autoplay playsinline></video>
+
+    <!-- Waiting overlay -->
+    <div id="waitingOverlay" class="waiting-overlay">
+      <div class="waiting-content">
+        <div class="pulse-circle">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="white">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+        </div>
+        <h2 id="waitingTitle">किसी का इंतज़ार...</h2>
+        <p class="waiting-sub">नीचे दिया link भेजकर बुलाएँ</p>
+
+        <div class="share-link-box">
+          <input type="text" id="shareLink" readonly />
+          <button id="shareCopyBtn" class="copy-link-btn">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="white">
+              <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+            </svg>
+            <span>Link Copy करें</span>
+          </button>
+        </div>
+
+        <button id="whatsappShareBtn" class="whatsapp-share-btn">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="white">
+            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/>
+          </svg>
+          <span>WhatsApp पर भेजें</span>
+        </button>
       </div>
-      <div class="video-wrapper">
-        <video id="remoteVideo" autoplay playsinline></video>
-        <span class="label">दूसरा user</span>
+    </div>
+
+    <!-- Local video PiP (Picture-in-Picture) -->
+    <div class="local-video-wrapper" id="localWrapper">
+      <video id="localVideo" autoplay muted playsinline></video>
+    </div>
+
+    <!-- Top status bar -->
+    <div class="top-bar">
+      <div class="call-info">
+        <div class="status-row">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">Connecting...</span>
+        </div>
+        <div class="timer" id="timer">00:00</div>
       </div>
     </div>
+
+    <!-- Bottom controls -->
     <div class="controls">
-      <button id="muteBtn">Mic Off</button>
-      <button id="cameraBtn">Camera Off</button>
-      <button id="screenBtn">Share Screen</button>
-      <button id="hangupBtn" class="danger">End Call</button>
+      <button id="muteBtn" class="control-btn" title="Microphone">
+        <svg id="micIcon" viewBox="0 0 24 24" width="28" height="28" fill="white">
+          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/>
+        </svg>
+      </button>
+
+      <button id="cameraBtn" class="control-btn" title="Camera">
+        <svg id="camIcon" viewBox="0 0 24 24" width="28" height="28" fill="white">
+          <path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/>
+        </svg>
+      </button>
+
+      <button id="screenBtn" class="control-btn" title="Screen Share">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="white">
+          <path d="M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/>
+        </svg>
+      </button>
+
+      <button id="inviteBtn" class="control-btn" title="Invite">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="white">
+          <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
+      </button>
+
+      <button id="hangupBtn" class="control-btn end-call" title="End Call">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="white">
+          <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/>
+        </svg>
+      </button>
     </div>
-    <p id="statusMsg" class="msg"></p>
   </div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast"></div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="app.js"></script>
