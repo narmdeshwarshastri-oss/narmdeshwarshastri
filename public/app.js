@@ -105,8 +105,69 @@ const acceptCallBtn = document.getElementById('acceptCallBtn');
 
 let pendingRoomId = null;
 
+// Detect in-app browsers (WhatsApp, FB, Instagram) - these often block camera/mic
+function isInAppBrowser() {
+  const ua = navigator.userAgent;
+  const tests = [
+    /WhatsApp/i,
+    /Instagram/i,
+    /FBAN|FBAV|FB_IAB/i,    // Facebook in-app
+    /Line/i,
+    /MicroMessenger/i,       // WeChat
+    /; wv\)/,                // Android WebView
+    /\(iPhone.*Mobile.*Safari/i  // doesn't have CriOS/FxiOS - probably in-app
+  ];
+  // Actual Safari has "Version" and "Safari"
+  if (/iPhone/i.test(ua) && !/CriOS|FxiOS/.test(ua) && !/Version.*Safari/.test(ua)) {
+    return true;
+  }
+  for (const re of tests) {
+    if (re.test(ua) && !(/CriOS|FxiOS|Version.*Safari/.test(ua) && !/FBAN|FBAV|FB_IAB|Instagram|WhatsApp/i.test(ua))) {
+      // simplified test
+    }
+  }
+  return /WhatsApp|FBAN|FBAV|FB_IAB|Instagram|Line|MicroMessenger|; wv\)/i.test(ua);
+}
+
+function showInAppBrowserWarning() {
+  const warning = document.createElement('div');
+  warning.className = 'inapp-warning';
+  warning.innerHTML = `
+    <div class="warning-card">
+      <div class="warning-icon">⚠️</div>
+      <h2>Browser बदलें</h2>
+      <p>आप अभी <strong>WhatsApp के अंदर के browser</strong> में हैं।</p>
+      <p>इसमें Camera/Mic काम नहीं करता।</p>
+      <div class="warning-steps">
+        <p><strong>क्या करें:</strong></p>
+        <ol>
+          <li>ऊपर/नीचे दाईं तरफ <strong>तीन dots (⋮)</strong> पर click करें</li>
+          <li><strong>"Open in Browser"</strong> या <strong>"Chrome में खोलें"</strong> चुनें</li>
+        </ol>
+      </div>
+      <button id="copyLinkWarning" class="big-btn primary" style="margin-top: 16px">Link Copy करें</button>
+    </div>
+  `;
+  document.body.appendChild(warning);
+  document.getElementById('copyLinkWarning').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      showToast('Link copy हो गया! Chrome में paste करें');
+    } catch (e) {
+      showToast('Address bar से link copy करें');
+    }
+  });
+}
+
 window.addEventListener('load', () => {
   const roomFromUrl = getRoomFromUrl();
+
+  // If in WhatsApp/Instagram browser and trying to join, show warning
+  if (roomFromUrl && isInAppBrowser()) {
+    showInAppBrowserWarning();
+    return;
+  }
+
   if (roomFromUrl) {
     // Receiver clicked an invite link - show invite view, don't auto-join
     pendingRoomId = roomFromUrl;
