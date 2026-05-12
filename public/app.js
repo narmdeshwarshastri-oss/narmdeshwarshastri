@@ -49,11 +49,38 @@ let isSharingScreen = false;
 let callStartTime = null;
 let timerInterval = null;
 
+// ICE servers - STUN (free) + TURN (free public relay servers)
+// TURN servers help when direct peer connection is blocked by firewall/NAT
 const iceServers = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' }
-  ]
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:stun3.l.google.com:19302' },
+    { urls: 'stun:stun4.l.google.com:19302' },
+    { urls: 'stun:stun.relay.metered.ca:80' },
+    {
+      urls: 'turn:openrelay.metered.ca:80',
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443',
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
+    },
+    {
+      urls: 'turn:relay1.expressturn.com:3480',
+      username: '000000002067886454',
+      credential: 'P/Mh1S+wnJfDh1NKZkQJl1KQy00='
+    }
+  ],
+  iceCandidatePoolSize: 10
 };
 
 // ============ Toast ============
@@ -223,18 +250,58 @@ async function createPeerConnection() {
   };
 
   peerConnection.ontrack = (event) => {
-    remoteVideo.srcObject = event.streams[0];
+    console.log('Received remote track:', event.track.kind);
+    if (event.streams && event.streams[0]) {
+      remoteVideo.srcObject = event.streams[0];
+    } else {
+      // Some browsers fire ontrack without streams - build one
+      if (!remoteVideo.srcObject) {
+        remoteVideo.srcObject = new MediaStream();
+      }
+      remoteVideo.srcObject.addTrack(event.track);
+    }
+    // Try to play (autoplay may be blocked on some browsers)
+    remoteVideo.play().catch(err => {
+      console.warn('Remote video play failed:', err);
+      showToast('Video दिखाने के लिए screen पर tap करें');
+    });
     onConnected();
   };
 
+  peerConnection.oniceconnectionstatechange = () => {
+    console.log('ICE state:', peerConnection.iceConnectionState);
+    switch (peerConnection.iceConnectionState) {
+      case 'checking':
+        setStatus('Connection बना रहे हैं...', false);
+        break;
+      case 'connected':
+      case 'completed':
+        onConnected();
+        break;
+      case 'failed':
+        setStatus('Connection नहीं बन सकी', false);
+        showToast('Connection fail - दूसरे network पर try करें');
+        break;
+      case 'disconnected':
+        setStatus('Connection टूट गया', false);
+        break;
+    }
+  };
+
   peerConnection.onconnectionstatechange = () => {
+    console.log('Peer state:', peerConnection.connectionState);
     if (peerConnection.connectionState === 'connected') {
       onConnected();
-    } else if (peerConnection.connectionState === 'disconnected' || peerConnection.connectionState === 'failed') {
-      setStatus('Connection टूट गया', false);
     }
   };
 }
+
+// User tap fallback for autoplay
+document.addEventListener('click', () => {
+  if (remoteVideo.srcObject && remoteVideo.paused) {
+    remoteVideo.play().catch(() => {});
+  }
+}, { once: false });
 
 function onConnected() {
   setStatus('जुड़े हैं', true);
