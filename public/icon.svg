@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#25D366"/>
+      <stop offset="100%" stop-color="#075E54"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFB347"/>
+      <stop offset="100%" stop-color="#FF8C00"/>
+    </linearGradient>
+    <radialGradient id="lensGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFD580" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#FFD580" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="8"/>
+      <feOffset dx="0" dy="6" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.35"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Rounded square background with gradient -->
+  <rect x="0" y="0" width="512" height="512" rx="110" fill="url(#bgGrad)"/>
+
+  <!-- Saffron arc decoration top-right -->
+  <path d="M 512 0 L 512 200 A 250 250 0 0 0 312 0 Z" fill="url(#accentGrad)"/>
+
+  <!-- Soft glow behind the lens area -->
+  <circle cx="320" cy="256" r="160" fill="url(#lensGlow)"/>
+
+  <!-- Subtle inner ring -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="white" stroke-width="2" opacity="0.12"/>
+
+  <!-- Video camera shape (large, centered, white) -->
+  <g filter="url(#shadow)">
+    <!-- Camera body -->
+    <rect x="125" y="180" width="210" height="152" rx="28" fill="white"/>
+    <!-- Camera lens (right-facing triangle/wedge) -->
+    <path d="M 335 218 L 408 162 Q 420 154 420 170 L 420 342 Q 420 358 408 350 L 335 294 Z" fill="white"/>
+  </g>
+
+  <!-- Recording indicator dot (small saffron circle on camera body) -->
+  <circle cx="172" cy="218" r="11" fill="#FF6B35"/>
+
+  <!-- Mini decorative dots in bottom-left (subtle Indian rangoli vibe) -->
+  <g opacity="0.7">
+    <circle cx="78" cy="430" r="6" fill="#FFB347"/>
+    <circle cx="100" cy="450" r="4" fill="#FFB347"/>
+    <circle cx="80" cy="465" r="3" fill="#FFB347"/>
+  </g>
+</svg>
