@@ -91,7 +91,7 @@ function showToast(message, duration = 2000) {
   showToast._t = setTimeout(() => toast.classList.remove('show'), duration);
 }
 
-// ============ Auto-join from URL ============
+// ============ Auto-detect invite from URL ============
 function getRoomFromUrl() {
   const hash = window.location.hash.replace('#', '').trim();
   if (hash) return hash;
@@ -99,12 +99,28 @@ function getRoomFromUrl() {
   return params.get('room');
 }
 
+const startView = document.getElementById('startView');
+const inviteView = document.getElementById('inviteView');
+const acceptCallBtn = document.getElementById('acceptCallBtn');
+
+let pendingRoomId = null;
+
 window.addEventListener('load', () => {
   const roomFromUrl = getRoomFromUrl();
   if (roomFromUrl) {
-    roomInput.value = roomFromUrl;
-    // Auto-join after small delay
-    setTimeout(() => startCall(roomFromUrl), 100);
+    // Receiver clicked an invite link - show invite view, don't auto-join
+    pendingRoomId = roomFromUrl;
+    startView.classList.add('hidden');
+    inviteView.classList.remove('hidden');
+  } else {
+    startView.classList.remove('hidden');
+    inviteView.classList.add('hidden');
+  }
+});
+
+acceptCallBtn.addEventListener('click', () => {
+  if (pendingRoomId) {
+    startCall(pendingRoomId);
   }
 });
 
