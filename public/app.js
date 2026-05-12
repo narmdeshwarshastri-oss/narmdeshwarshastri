@@ -341,9 +341,39 @@ async function stopScreenShare() {
   showToast('Screen share बंद');
 }
 
-// ============ Invite (show waiting overlay again) ============
-inviteBtn.addEventListener('click', () => {
+// ============ Invite (share link via WhatsApp / native share) ============
+inviteBtn.addEventListener('click', async () => {
+  const link = shareLinkInput.value;
+  const shareText = 'नमस्ते 🙏 मेरे साथ video call पर बात कीजिए। नीचे link पर click करें:\n' + link;
+
+  // Try native share API first (mobile phones, some desktops)
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'Shastri Ji Connect',
+        text: 'मेरे साथ video call पर बात कीजिए',
+        url: link
+      });
+      return;
+    } catch (err) {
+      // User cancelled - that's fine
+      if (err.name === 'AbortError') return;
+    }
+  }
+
+  // Fallback: copy to clipboard + open WhatsApp share
+  try {
+    await navigator.clipboard.writeText(link);
+    showToast('Link copy हो गया! WhatsApp खुल रहा है...');
+  } catch (err) {}
+
+  // Make sure the overlay is visible so user can also see the link
   waitingOverlay.classList.remove('hidden');
+
+  // Open WhatsApp share in new tab
+  setTimeout(() => {
+    window.open('https://wa.me/?text=' + encodeURIComponent(shareText), '_blank');
+  }, 300);
 });
 
 // Tap on remote area to close waiting overlay
