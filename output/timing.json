@@ -1,0 +1,1253 @@
+{
+ "note": "src_* = मूल रॉ फ़ाइल 'गरुण पुराण मृत्यु नहीं जीवन की किताब.MP4' का समय (सेकंड)। edit_* = कट लगने के बाद का समय। प्रकाशित विडियो के समय (0:07 आदि) रॉ से लगभग 2.7 s पीछे हैं; रॉ में पहला शब्द 9.757 s पर है। शब्द-समय faster-whisper (medium) के शब्द-समय को ffmpeg silencedetect (-35 dB, 0.25 s) की सीमाओं पर कसकर निकाले गए।",
+ "fps": 25,
+ "src_head": 9.64,
+ "src_speech_end": 65.21,
+ "src_tail": 69.24,
+ "edit_speech_end": 54.01,
+ "edit_duration": 58.04,
+ "edit_duration_frames": 1451,
+ "removed": [
+  {
+   "src_start": 0.0,
+   "src_end": 9.64,
+   "dur": 9.64,
+   "reason": "शुरू का खाली हिस्सा (कैमरा चालू, बोलना 9.76 s से); विडियो पहले शब्द 'गरुड़' से"
+  },
+  {
+   "src_start": 16.6,
+   "src_end": 16.8,
+   "dur": 0.2,
+   "reason": "'डरते हैं' के बाद वाक्य-सीमा का मौन 1.05 s → 0.85 s (बड़ी बात के बाद का ठहराव 0.8-1.0 में)"
+  },
+  {
+   "src_start": 21.52,
+   "src_end": 22.2,
+   "dur": 0.68,
+   "reason": "प्रश्न '...लिखा क्या है?' के बाद मौन 1.65 s → 0.97 s (बड़ी बात के बाद का ठहराव)"
+  },
+  {
+   "src_start": 26.08,
+   "src_end": 26.56,
+   "dur": 0.48,
+   "reason": "'18 पुराणों में से एक' के बाद उपवाक्य-सीमा का मौन 0.87 s → 0.39 s"
+  },
+  {
+   "src_start": 30.2,
+   "src_end": 30.4,
+   "dur": 0.2,
+   "reason": "'बस मौत की किताब है' के बाद मौन 1.09 s → 0.89 s (बड़ी बात, हल्का ठहराव)"
+  }
+ ],
+ "cut_points_edit": [
+  {
+   "src": 16.6,
+   "edit": 6.96,
+   "frame": 174
+  },
+  {
+   "src": 21.52,
+   "edit": 11.68,
+   "frame": 292
+  },
+  {
+   "src": 26.08,
+   "edit": 15.56,
+   "frame": 389
+  },
+  {
+   "src": 30.2,
+   "edit": 19.2,
+   "frame": 480
+  }
+ ],
+ "kept_src_frames": [
+  [
+   241,
+   414
+  ],
+  [
+   420,
+   537
+  ],
+  [
+   555,
+   651
+  ],
+  [
+   664,
+   754
+  ],
+  [
+   760,
+   1730
+  ]
+ ],
+ "sentences": [
+  {
+   "id": "S1",
+   "text": "गरुड़ पुराण, जिस किताब को लोग अपने घर में रखने से भी डरते हैं। आपने कभी सोचा है कि उसके भीतर आखिर लिखा क्या है?",
+   "given_time_published": "0:07",
+   "src_start": 9.757,
+   "src_end": 21.026,
+   "edit_start": 0.117,
+   "edit_end": 11.186,
+   "asr_words": "गरुड़ पुराण जिस किताब को लोग अपने घर में रखने से भी डरते हैं, आपने कभी सोचा हैं कि उसके भीतर आखिर लिखा क्या हैं?"
+  },
+  {
+   "id": "S2",
+   "text": "गरुड़ पुराण 18 पुराणों में से एक, और लोग समझते हैं कि यह बस मौत की किताब है।",
+   "given_time_published": "0:20",
+   "src_start": 22.676,
+   "src_end": 29.738,
+   "edit_start": 12.156,
+   "edit_end": 18.738,
+   "asr_words": "गरुड़ पुराण 18 पुराणो में से एक और लोग समसते हैं कि यह भस मौत की किताब हैं,"
+  },
+  {
+   "id": "S3",
+   "text": "घर में कोई चला जाए तो 13 दिन सुन लो और फिर बन्द करके रख दो। पर सच यह है कि इस पूरी किताब का बहुत छोटा सा हिस्सा मृत्यु पर है।",
+   "given_time_published": "0:28",
+   "src_start": 30.828,
+   "src_end": 43.454,
+   "edit_start": 19.628,
+   "edit_end": 32.254,
+   "asr_words": "घर में कोई चला जाए तो 13 दिन सुन लो और फिर बंद करके रख दो. पर सचिया है कि इस पूरी किताब का बहुत छोटा सा हिस्सा मृत्यु पर है,"
+  },
+  {
+   "id": "S4",
+   "text": "बाकी में रत्नों की पहचान है। आयुर्वेद है। ग्रह, नक्षत्र और मुहूर्त का पूरा ज्योतिष है।",
+   "given_time_published": "0:37",
+   "src_start": 44.056,
+   "src_end": 51.506,
+   "edit_start": 32.856,
+   "edit_end": 40.306,
+   "asr_words": "बाकी में रत्नो की पहचान है, आयूरवेद है, ग्रहनक्षत्र और मूर्त का पूरा जोतिश है."
+  },
+  {
+   "id": "S5",
+   "text": "और जो हिस्सा मृत्यु पर है, वह भी डराने के लिए नहीं लिखा गया। वह इसलिए लिखा गया ताकि हमें पता रहे कि जो जा रहा है, उसका साथ आखिर तक कैसे दिया जाए।",
+   "given_time_published": "0:51",
+   "src_start": 52.184,
+   "src_end": 65.208,
+   "edit_start": 40.984,
+   "edit_end": 54.008,
+   "asr_words": "और जो हिस्सा मृत्यु पर है, वह भी डराने के लिए नहीं लिखा गया, वह इसलिये लिखा गया, ताकि हमें पता रहे, कि जो जा रहा है, उसका सांथ आखर तक कैसे दिया जाए."
+  }
+ ],
+ "cues": [
+  {
+   "id": "title_garud_puran",
+   "text": "गरुड़ पुराण",
+   "src_start": 9.757,
+   "src_end": 11.1,
+   "edit_start": 0.117,
+   "edit_end": 1.46,
+   "edit_start_frame": 3,
+   "edit_end_frame": 36
+  },
+  {
+   "id": "dar_punch",
+   "text": "डरते हैं",
+   "src_start": 15.8,
+   "src_end": 16.191,
+   "edit_start": 6.16,
+   "edit_end": 6.551,
+   "edit_start_frame": 154,
+   "edit_end_frame": 164
+  },
+  {
+   "id": "dar_keyword",
+   "text": "घर में रखने से भी डरते हैं",
+   "src_start": 14.5,
+   "src_end": 16.191,
+   "edit_start": 4.86,
+   "edit_end": 6.551,
+   "edit_start_frame": 122,
+   "edit_end_frame": 164
+  },
+  {
+   "id": "question",
+   "text": "उसके भीतर आखिर लिखा क्या है?",
+   "src_start": 19.12,
+   "src_end": 21.026,
+   "edit_start": 9.28,
+   "edit_end": 11.186,
+   "edit_start_frame": 232,
+   "edit_end_frame": 280
+  },
+  {
+   "id": "n18",
+   "text": "18 पुराणों में से एक",
+   "src_start": 23.906,
+   "src_end": 25.851,
+   "edit_start": 13.386,
+   "edit_end": 15.331,
+   "edit_start_frame": 335,
+   "edit_end_frame": 383
+  },
+  {
+   "id": "maut_band",
+   "text": "बस मौत की किताब है",
+   "src_start": 28.52,
+   "src_end": 29.738,
+   "edit_start": 17.52,
+   "edit_end": 18.738,
+   "edit_start_frame": 438,
+   "edit_end_frame": 468
+  },
+  {
+   "id": "din13",
+   "text": "13 दिन",
+   "src_start": 32.98,
+   "src_end": 33.543,
+   "edit_start": 21.78,
+   "edit_end": 22.343,
+   "edit_start_frame": 544,
+   "edit_end_frame": 559
+  },
+  {
+   "id": "phir_band",
+   "text": "फिर बन्द",
+   "src_start": 35.42,
+   "src_end": 35.9,
+   "edit_start": 24.22,
+   "edit_end": 24.7,
+   "edit_start_frame": 606,
+   "edit_end_frame": 618
+  },
+  {
+   "id": "sach",
+   "text": "पर सच यह है",
+   "src_start": 37.71,
+   "src_end": 38.748,
+   "edit_start": 26.51,
+   "edit_end": 27.548,
+   "edit_start_frame": 663,
+   "edit_end_frame": 689
+  },
+  {
+   "id": "bar_small_part",
+   "text": "बहुत छोटा सा हिस्सा मृत्यु पर है",
+   "src_start": 40.787,
+   "src_end": 43.454,
+   "edit_start": 29.587,
+   "edit_end": 32.254,
+   "edit_start_frame": 740,
+   "edit_end_frame": 806
+  },
+  {
+   "id": "card_ratna",
+   "text": "रत्नों की पहचान",
+   "src_start": 45.088,
+   "src_end": 46.3,
+   "edit_start": 33.888,
+   "edit_end": 35.1,
+   "edit_start_frame": 847,
+   "edit_end_frame": 878
+  },
+  {
+   "id": "card_ayurved",
+   "text": "आयुर्वेद",
+   "src_start": 47.013,
+   "src_end": 47.66,
+   "edit_start": 35.813,
+   "edit_end": 36.46,
+   "edit_start_frame": 895,
+   "edit_end_frame": 912
+  },
+  {
+   "id": "card_jyotish",
+   "text": "ग्रह, नक्षत्र और मुहूर्त का पूरा ज्योतिष",
+   "src_start": 48.181,
+   "src_end": 51.44,
+   "edit_start": 36.981,
+   "edit_end": 40.24,
+   "edit_start_frame": 925,
+   "edit_end_frame": 1006
+  },
+  {
+   "id": "darane_nahin",
+   "text": "डराने के लिए नहीं लिखा गया",
+   "src_start": 54.98,
+   "src_end": 56.227,
+   "edit_start": 43.78,
+   "edit_end": 45.027,
+   "edit_start_frame": 1094,
+   "edit_end_frame": 1126
+  },
+  {
+   "id": "final_line",
+   "text": "जो जा रहा है, उसका साथ आखिर तक कैसे दिया जाए",
+   "src_start": 60.66,
+   "src_end": 65.208,
+   "edit_start": 49.46,
+   "edit_end": 54.008,
+   "edit_start_frame": 1236,
+   "edit_end_frame": 1350
+  }
+ ],
+ "words": [
+  {
+   "w": "गरुड़",
+   "src_start": 9.757,
+   "src_end": 10.319,
+   "edit_start": 0.117
+  },
+  {
+   "w": "पुराण",
+   "src_start": 10.722,
+   "src_end": 11.1,
+   "edit_start": 1.082
+  },
+  {
+   "w": "जिस",
+   "src_start": 11.847,
+   "src_end": 12.22,
+   "edit_start": 2.207
+  },
+  {
+   "w": "किताब",
+   "src_start": 12.22,
+   "src_end": 12.7,
+   "edit_start": 2.58
+  },
+  {
+   "w": "को",
+   "src_start": 12.7,
+   "src_end": 12.983,
+   "edit_start": 3.06
+  },
+  {
+   "w": "लोग",
+   "src_start": 13.479,
+   "src_end": 14.04,
+   "edit_start": 3.839
+  },
+  {
+   "w": "अपने",
+   "src_start": 14.04,
+   "src_end": 14.5,
+   "edit_start": 4.4
+  },
+  {
+   "w": "घर",
+   "src_start": 14.5,
+   "src_end": 14.84,
+   "edit_start": 4.86
+  },
+  {
+   "w": "में",
+   "src_start": 14.84,
+   "src_end": 15.04,
+   "edit_start": 5.2
+  },
+  {
+   "w": "रखने",
+   "src_start": 15.04,
+   "src_end": 15.58,
+   "edit_start": 5.4
+  },
+  {
+   "w": "से",
+   "src_start": 15.58,
+   "src_end": 15.76,
+   "edit_start": 5.94
+  },
+  {
+   "w": "भी",
+   "src_start": 15.76,
+   "src_end": 15.8,
+   "edit_start": 6.12
+  },
+  {
+   "w": "डरते",
+   "src_start": 15.8,
+   "src_end": 16.041,
+   "edit_start": 6.16
+  },
+  {
+   "w": "हैं,",
+   "src_start": 16.041,
+   "src_end": 16.191,
+   "edit_start": 6.401
+  },
+  {
+   "w": "आपने",
+   "src_start": 17.235,
+   "src_end": 17.56,
+   "edit_start": 7.395
+  },
+  {
+   "w": "कभी",
+   "src_start": 17.56,
+   "src_end": 17.74,
+   "edit_start": 7.72
+  },
+  {
+   "w": "सोचा",
+   "src_start": 17.74,
+   "src_end": 18.18,
+   "edit_start": 7.9
+  },
+  {
+   "w": "हैं",
+   "src_start": 18.18,
+   "src_end": 18.22,
+   "edit_start": 8.34
+  },
+  {
+   "w": "कि",
+   "src_start": 19.064,
+   "src_end": 19.12,
+   "edit_start": 9.224
+  },
+  {
+   "w": "उसके",
+   "src_start": 19.12,
+   "src_end": 19.4,
+   "edit_start": 9.28
+  },
+  {
+   "w": "भीतर",
+   "src_start": 19.4,
+   "src_end": 19.74,
+   "edit_start": 9.56
+  },
+  {
+   "w": "आखिर",
+   "src_start": 19.74,
+   "src_end": 20.035,
+   "edit_start": 9.9
+  },
+  {
+   "w": "लिखा",
+   "src_start": 20.324,
+   "src_end": 20.76,
+   "edit_start": 10.484
+  },
+  {
+   "w": "क्या",
+   "src_start": 20.76,
+   "src_end": 20.98,
+   "edit_start": 10.92
+  },
+  {
+   "w": "हैं?",
+   "src_start": 20.98,
+   "src_end": 21.026,
+   "edit_start": 11.14
+  },
+  {
+   "w": "गरुड़",
+   "src_start": 22.676,
+   "src_end": 23.12,
+   "edit_start": 12.156
+  },
+  {
+   "w": "पुराण",
+   "src_start": 23.12,
+   "src_end": 23.509,
+   "edit_start": 12.6
+  },
+  {
+   "w": "18",
+   "src_start": 23.906,
+   "src_end": 24.46,
+   "edit_start": 13.386
+  },
+  {
+   "w": "पुराणो",
+   "src_start": 24.46,
+   "src_end": 25.14,
+   "edit_start": 13.94
+  },
+  {
+   "w": "में",
+   "src_start": 25.14,
+   "src_end": 25.36,
+   "edit_start": 14.62
+  },
+  {
+   "w": "से",
+   "src_start": 25.36,
+   "src_end": 25.5,
+   "edit_start": 14.84
+  },
+  {
+   "w": "एक",
+   "src_start": 25.5,
+   "src_end": 25.851,
+   "edit_start": 14.98
+  },
+  {
+   "w": "और",
+   "src_start": 26.72,
+   "src_end": 26.86,
+   "edit_start": 15.72
+  },
+  {
+   "w": "लोग",
+   "src_start": 26.86,
+   "src_end": 27.1,
+   "edit_start": 15.86
+  },
+  {
+   "w": "समसते",
+   "src_start": 27.1,
+   "src_end": 27.62,
+   "edit_start": 16.1
+  },
+  {
+   "w": "हैं",
+   "src_start": 27.62,
+   "src_end": 27.921,
+   "edit_start": 16.62
+  },
+  {
+   "w": "कि",
+   "src_start": 28.213,
+   "src_end": 28.36,
+   "edit_start": 17.213
+  },
+  {
+   "w": "यह",
+   "src_start": 28.36,
+   "src_end": 28.52,
+   "edit_start": 17.36
+  },
+  {
+   "w": "भस",
+   "src_start": 28.52,
+   "src_end": 28.76,
+   "edit_start": 17.52
+  },
+  {
+   "w": "मौत",
+   "src_start": 28.76,
+   "src_end": 29.36,
+   "edit_start": 17.76
+  },
+  {
+   "w": "की",
+   "src_start": 29.36,
+   "src_end": 29.44,
+   "edit_start": 18.36
+  },
+  {
+   "w": "किताब",
+   "src_start": 29.44,
+   "src_end": 29.588,
+   "edit_start": 18.44
+  },
+  {
+   "w": "हैं,",
+   "src_start": 29.588,
+   "src_end": 29.738,
+   "edit_start": 18.588
+  },
+  {
+   "w": "घर",
+   "src_start": 30.828,
+   "src_end": 31.16,
+   "edit_start": 19.628
+  },
+  {
+   "w": "में",
+   "src_start": 31.16,
+   "src_end": 31.3,
+   "edit_start": 19.96
+  },
+  {
+   "w": "कोई",
+   "src_start": 31.3,
+   "src_end": 31.5,
+   "edit_start": 20.1
+  },
+  {
+   "w": "चला",
+   "src_start": 31.5,
+   "src_end": 31.88,
+   "edit_start": 20.3
+  },
+  {
+   "w": "जाए",
+   "src_start": 31.88,
+   "src_end": 32.051,
+   "edit_start": 20.68
+  },
+  {
+   "w": "तो",
+   "src_start": 32.837,
+   "src_end": 32.98,
+   "edit_start": 21.637
+  },
+  {
+   "w": "13",
+   "src_start": 32.98,
+   "src_end": 33.3,
+   "edit_start": 21.78
+  },
+  {
+   "w": "दिन",
+   "src_start": 33.3,
+   "src_end": 33.543,
+   "edit_start": 22.1
+  },
+  {
+   "w": "सुन",
+   "src_start": 34.104,
+   "src_end": 34.42,
+   "edit_start": 22.904
+  },
+  {
+   "w": "लो",
+   "src_start": 34.42,
+   "src_end": 34.505,
+   "edit_start": 23.22
+  },
+  {
+   "w": "और",
+   "src_start": 35.235,
+   "src_end": 35.42,
+   "edit_start": 24.035
+  },
+  {
+   "w": "फिर",
+   "src_start": 35.42,
+   "src_end": 35.62,
+   "edit_start": 24.22
+  },
+  {
+   "w": "बंद",
+   "src_start": 35.62,
+   "src_end": 35.9,
+   "edit_start": 24.42
+  },
+  {
+   "w": "करके",
+   "src_start": 35.9,
+   "src_end": 36.332,
+   "edit_start": 24.7
+  },
+  {
+   "w": "रख",
+   "src_start": 36.619,
+   "src_end": 36.88,
+   "edit_start": 25.419
+  },
+  {
+   "w": "दो.",
+   "src_start": 36.88,
+   "src_end": 36.948,
+   "edit_start": 25.68
+  },
+  {
+   "w": "पर",
+   "src_start": 37.71,
+   "src_end": 37.88,
+   "edit_start": 26.51
+  },
+  {
+   "w": "सचिया",
+   "src_start": 37.88,
+   "src_end": 38.5,
+   "edit_start": 26.68
+  },
+  {
+   "w": "है",
+   "src_start": 38.5,
+   "src_end": 38.748,
+   "edit_start": 27.3
+  },
+  {
+   "w": "कि",
+   "src_start": 39.1,
+   "src_end": 39.26,
+   "edit_start": 27.9
+  },
+  {
+   "w": "इस",
+   "src_start": 39.26,
+   "src_end": 39.44,
+   "edit_start": 28.06
+  },
+  {
+   "w": "पूरी",
+   "src_start": 39.44,
+   "src_end": 39.72,
+   "edit_start": 28.24
+  },
+  {
+   "w": "किताब",
+   "src_start": 39.72,
+   "src_end": 40.16,
+   "edit_start": 28.52
+  },
+  {
+   "w": "का",
+   "src_start": 40.16,
+   "src_end": 40.472,
+   "edit_start": 28.96
+  },
+  {
+   "w": "बहुत",
+   "src_start": 40.787,
+   "src_end": 41.38,
+   "edit_start": 29.587
+  },
+  {
+   "w": "छोटा",
+   "src_start": 41.38,
+   "src_end": 41.88,
+   "edit_start": 30.18
+  },
+  {
+   "w": "सा",
+   "src_start": 41.88,
+   "src_end": 42.0,
+   "edit_start": 30.68
+  },
+  {
+   "w": "हिस्सा",
+   "src_start": 42.0,
+   "src_end": 42.64,
+   "edit_start": 30.8
+  },
+  {
+   "w": "मृत्यु",
+   "src_start": 42.64,
+   "src_end": 43.3,
+   "edit_start": 31.44
+  },
+  {
+   "w": "पर",
+   "src_start": 43.3,
+   "src_end": 43.34,
+   "edit_start": 32.1
+  },
+  {
+   "w": "है,",
+   "src_start": 43.34,
+   "src_end": 43.454,
+   "edit_start": 32.14
+  },
+  {
+   "w": "बाकी",
+   "src_start": 44.056,
+   "src_end": 44.56,
+   "edit_start": 32.856
+  },
+  {
+   "w": "में",
+   "src_start": 44.56,
+   "src_end": 44.741,
+   "edit_start": 33.36
+  },
+  {
+   "w": "रत्नो",
+   "src_start": 45.088,
+   "src_end": 45.72,
+   "edit_start": 33.888
+  },
+  {
+   "w": "की",
+   "src_start": 45.72,
+   "src_end": 45.82,
+   "edit_start": 34.52
+  },
+  {
+   "w": "पहचान",
+   "src_start": 45.82,
+   "src_end": 46.3,
+   "edit_start": 34.62
+  },
+  {
+   "w": "है,",
+   "src_start": 46.3,
+   "src_end": 46.408,
+   "edit_start": 35.1
+  },
+  {
+   "w": "आयूरवेद",
+   "src_start": 47.013,
+   "src_end": 47.66,
+   "edit_start": 35.813
+  },
+  {
+   "w": "है,",
+   "src_start": 47.66,
+   "src_end": 47.782,
+   "edit_start": 36.46
+  },
+  {
+   "w": "ग्रहनक्षत्र",
+   "src_start": 48.181,
+   "src_end": 49.034,
+   "edit_start": 36.981
+  },
+  {
+   "w": "और",
+   "src_start": 49.401,
+   "src_end": 49.62,
+   "edit_start": 38.201
+  },
+  {
+   "w": "मूर्त",
+   "src_start": 49.62,
+   "src_end": 50.06,
+   "edit_start": 38.42
+  },
+  {
+   "w": "का",
+   "src_start": 50.06,
+   "src_end": 50.33,
+   "edit_start": 38.86
+  },
+  {
+   "w": "पूरा",
+   "src_start": 50.621,
+   "src_end": 51.0,
+   "edit_start": 39.421
+  },
+  {
+   "w": "जोतिश",
+   "src_start": 51.0,
+   "src_end": 51.44,
+   "edit_start": 39.8
+  },
+  {
+   "w": "है.",
+   "src_start": 51.44,
+   "src_end": 51.506,
+   "edit_start": 40.24
+  },
+  {
+   "w": "और",
+   "src_start": 52.184,
+   "src_end": 52.36,
+   "edit_start": 40.984
+  },
+  {
+   "w": "जो",
+   "src_start": 52.36,
+   "src_end": 52.5,
+   "edit_start": 41.16
+  },
+  {
+   "w": "हिस्सा",
+   "src_start": 52.5,
+   "src_end": 52.989,
+   "edit_start": 41.3
+  },
+  {
+   "w": "मृत्यु",
+   "src_start": 53.251,
+   "src_end": 53.9,
+   "edit_start": 42.051
+  },
+  {
+   "w": "पर",
+   "src_start": 53.9,
+   "src_end": 54.0,
+   "edit_start": 42.7
+  },
+  {
+   "w": "है,",
+   "src_start": 54.0,
+   "src_end": 54.176,
+   "edit_start": 42.8
+  },
+  {
+   "w": "वह",
+   "src_start": 54.549,
+   "src_end": 54.8,
+   "edit_start": 43.349
+  },
+  {
+   "w": "भी",
+   "src_start": 54.8,
+   "src_end": 54.98,
+   "edit_start": 43.6
+  },
+  {
+   "w": "डराने",
+   "src_start": 54.98,
+   "src_end": 55.48,
+   "edit_start": 43.78
+  },
+  {
+   "w": "के",
+   "src_start": 55.48,
+   "src_end": 55.54,
+   "edit_start": 44.28
+  },
+  {
+   "w": "लिए",
+   "src_start": 55.54,
+   "src_end": 55.62,
+   "edit_start": 44.34
+  },
+  {
+   "w": "नहीं",
+   "src_start": 55.62,
+   "src_end": 55.76,
+   "edit_start": 44.42
+  },
+  {
+   "w": "लिखा",
+   "src_start": 55.76,
+   "src_end": 56.06,
+   "edit_start": 44.56
+  },
+  {
+   "w": "गया,",
+   "src_start": 56.06,
+   "src_end": 56.227,
+   "edit_start": 44.86
+  },
+  {
+   "w": "वह",
+   "src_start": 56.91,
+   "src_end": 57.16,
+   "edit_start": 45.71
+  },
+  {
+   "w": "इसलिये",
+   "src_start": 57.16,
+   "src_end": 57.66,
+   "edit_start": 45.96
+  },
+  {
+   "w": "लिखा",
+   "src_start": 57.66,
+   "src_end": 57.98,
+   "edit_start": 46.46
+  },
+  {
+   "w": "गया,",
+   "src_start": 57.98,
+   "src_end": 58.245,
+   "edit_start": 46.78
+  },
+  {
+   "w": "ताकि",
+   "src_start": 58.575,
+   "src_end": 58.88,
+   "edit_start": 47.375
+  },
+  {
+   "w": "हमें",
+   "src_start": 58.88,
+   "src_end": 59.261,
+   "edit_start": 47.68
+  },
+  {
+   "w": "पता",
+   "src_start": 59.535,
+   "src_end": 59.86,
+   "edit_start": 48.335
+  },
+  {
+   "w": "रहे,",
+   "src_start": 59.86,
+   "src_end": 60.115,
+   "edit_start": 48.66
+  },
+  {
+   "w": "कि",
+   "src_start": 60.563,
+   "src_end": 60.66,
+   "edit_start": 49.363
+  },
+  {
+   "w": "जो",
+   "src_start": 60.66,
+   "src_end": 61.1,
+   "edit_start": 49.46
+  },
+  {
+   "w": "जा",
+   "src_start": 61.1,
+   "src_end": 61.44,
+   "edit_start": 49.9
+  },
+  {
+   "w": "रहा",
+   "src_start": 61.44,
+   "src_end": 61.74,
+   "edit_start": 50.24
+  },
+  {
+   "w": "है,",
+   "src_start": 61.74,
+   "src_end": 61.819,
+   "edit_start": 50.54
+  },
+  {
+   "w": "उसका",
+   "src_start": 62.329,
+   "src_end": 62.68,
+   "edit_start": 51.129
+  },
+  {
+   "w": "सांथ",
+   "src_start": 62.68,
+   "src_end": 63.115,
+   "edit_start": 51.48
+  },
+  {
+   "w": "आखर",
+   "src_start": 63.422,
+   "src_end": 63.84,
+   "edit_start": 52.222
+  },
+  {
+   "w": "तक",
+   "src_start": 63.84,
+   "src_end": 63.924,
+   "edit_start": 52.64
+  },
+  {
+   "w": "कैसे",
+   "src_start": 64.529,
+   "src_end": 64.9,
+   "edit_start": 53.329
+  },
+  {
+   "w": "दिया",
+   "src_start": 64.9,
+   "src_end": 65.16,
+   "edit_start": 53.7
+  },
+  {
+   "w": "जाए.",
+   "src_start": 65.16,
+   "src_end": 65.208,
+   "edit_start": 53.96
+  },
+  {
+   "w": "नमस्कार,",
+   "src_start": 66.857,
+   "src_end": 67.336,
+   "edit_start": 55.657
+  },
+  {
+   "w": "प्रीय",
+   "src_start": 68.329,
+   "src_end": 68.62,
+   "edit_start": 57.129
+  },
+  {
+   "w": "दर्षकों,",
+   "src_start": 68.62,
+   "src_end": 69.135,
+   "edit_start": 57.42
+  },
+  {
+   "w": "आज",
+   "src_start": 70.021,
+   "src_end": 70.452,
+   "edit_start": 58.821
+  },
+  {
+   "w": "सोंभार",
+   "src_start": 72.294,
+   "src_end": 72.84,
+   "edit_start": 61.094
+  },
+  {
+   "w": "की",
+   "src_start": 72.84,
+   "src_end": 72.92,
+   "edit_start": 61.64
+  },
+  {
+   "w": "कथा",
+   "src_start": 72.92,
+   "src_end": 73.3,
+   "edit_start": 61.72
+  },
+  {
+   "w": "में...",
+   "src_start": 73.3,
+   "src_end": 73.433,
+   "edit_start": 62.1
+  }
+ ],
+ "silences_src": [
+  [
+   0.0,
+   1.617
+  ],
+  [
+   1.617,
+   2.025
+  ],
+  [
+   2.285,
+   2.605
+  ],
+  [
+   3.515,
+   9.757
+  ],
+  [
+   10.319,
+   10.722
+  ],
+  [
+   11.1,
+   11.847
+  ],
+  [
+   12.983,
+   13.479
+  ],
+  [
+   16.191,
+   17.235
+  ],
+  [
+   18.19,
+   19.064
+  ],
+  [
+   20.035,
+   20.324
+  ],
+  [
+   21.026,
+   22.676
+  ],
+  [
+   23.509,
+   23.906
+  ],
+  [
+   25.851,
+   26.72
+  ],
+  [
+   27.921,
+   28.213
+  ],
+  [
+   29.738,
+   30.828
+  ],
+  [
+   32.051,
+   32.837
+  ],
+  [
+   33.543,
+   34.104
+  ],
+  [
+   34.505,
+   35.235
+  ],
+  [
+   36.332,
+   36.619
+  ],
+  [
+   36.948,
+   37.71
+  ],
+  [
+   38.748,
+   39.1
+  ],
+  [
+   40.472,
+   40.787
+  ],
+  [
+   43.454,
+   44.056
+  ],
+  [
+   44.741,
+   45.088
+  ],
+  [
+   46.408,
+   47.013
+  ],
+  [
+   47.782,
+   48.181
+  ],
+  [
+   49.034,
+   49.401
+  ],
+  [
+   50.33,
+   50.621
+  ],
+  [
+   51.506,
+   52.184
+  ],
+  [
+   52.989,
+   53.251
+  ],
+  [
+   54.176,
+   54.549
+  ],
+  [
+   56.227,
+   56.91
+  ],
+  [
+   58.245,
+   58.575
+  ],
+  [
+   59.261,
+   59.535
+  ],
+  [
+   60.115,
+   60.563
+  ],
+  [
+   61.819,
+   62.329
+  ],
+  [
+   63.115,
+   63.422
+  ],
+  [
+   63.924,
+   64.529
+  ],
+  [
+   65.208,
+   66.857
+  ],
+  [
+   67.336,
+   68.329
+  ],
+  [
+   69.135,
+   70.021
+  ],
+  [
+   70.452,
+   72.294
+  ],
+  [
+   73.433,
+   75.0
+  ]
+ ],
+ "kept_frames_total": 1451
+}

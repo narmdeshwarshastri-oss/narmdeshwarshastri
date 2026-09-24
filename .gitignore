@@ -3,3 +3,22 @@ node_modules/
 .DS_Store
 *.log
 npm-debug.log*
+
+# विडियो-एडिट: भारी मीडिया git में नहीं
+work/**/*.mov
+work/**/*.mp4
+work/**/*.MP4
+work/**/*.wav
+work/**/*.png
+work/**/*.jpg
+work/**/out/
+work/remotion/public/media/
+output/*.mp4
+source/
+work/colortest/
+work/stills/
+work/out_frames/
+work/v1/
+work/frames_src/
+!work/garbage_matte_4k.png
+__pycache__/
