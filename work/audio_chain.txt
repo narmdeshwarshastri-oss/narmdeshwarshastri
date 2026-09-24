@@ -1,0 +1,1 @@
+highpass=f=70,afftdn=nr=8:nf=-62:tn=0,deesser=i=0.35:m=0.5:f=0.5:s=o,acompressor=threshold=-22dB:ratio=2.5:attack=8:release=160:knee=4:makeup=2,alimiter=limit=0.52:attack=4:release=60:level=false,loudnorm=I=-14:TP=-1:LRA=11:measured_I=-18.23:measured_TP=-5.68:measured_LRA=3.60:measured_thresh=-28.94:offset=0.14:linear=true:print_format=summary
