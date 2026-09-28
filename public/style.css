@@ -39,6 +39,8 @@ button:active {
 
 input {
   font-family: inherit;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /* ============ LOBBY ============ */
@@ -74,10 +76,9 @@ input {
 }
 
 .tagline {
-  font-size: 13px;
-  opacity: 0.7;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
+  font-size: 14px;
+  opacity: 0.75;
+  letter-spacing: 0.3px;
   margin-bottom: 40px;
 }
 
@@ -305,6 +306,49 @@ input {
   background: #1a2a30;
 }
 
+/* A shared screen must not be cropped - show the whole thing */
+.remote-video.contain {
+  object-fit: contain;
+  background: #000;
+}
+
+/* Other side has camera off / audio only */
+.remote-placeholder {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(180deg, #14303a 0%, #0b1416 100%);
+  text-align: center;
+  padding: 20px;
+}
+
+.remote-placeholder .avatar {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.remote-placeholder p {
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.remote-placeholder .sub {
+  font-size: 13px;
+  opacity: 0.65;
+  font-weight: 400;
+}
+
 .local-video-wrapper {
   position: absolute;
   top: 80px;
@@ -323,7 +367,38 @@ input {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Mirror only the front camera; a shared screen or rear camera must read normally */
+.local-video-wrapper.mirror video {
   transform: scaleX(-1);
+}
+
+.local-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a2a30;
+}
+
+.flip-btn {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.flip-btn:hover {
+  background: rgba(0, 0, 0, 0.75);
 }
 
 @media (min-width: 768px) {
@@ -341,7 +416,7 @@ input {
   top: 0;
   left: 0;
   right: 0;
-  padding: 16px 20px;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) 20px 16px;
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, transparent 100%);
   z-index: 4;
 }
@@ -376,6 +451,18 @@ input {
   opacity: 0.75;
   margin-top: 2px;
   font-variant-numeric: tabular-nums;
+}
+
+.mute-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: rgba(231, 76, 60, 0.85);
+  font-size: 12px;
+  font-weight: 500;
 }
 
 /* Waiting overlay */
@@ -510,7 +597,7 @@ input {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 20px 12px 22px;
+  padding: 20px 12px calc(22px + env(safe-area-inset-bottom, 0px));
   background: linear-gradient(0deg, rgba(0, 0, 0, 0.75) 0%, transparent 100%);
   display: flex;
   justify-content: center;
@@ -553,6 +640,10 @@ input {
 
 .control-btn.active {
   background: #25D366;
+}
+
+.control-btn.unsupported {
+  opacity: 0.45;
 }
 
 .control-btn.end-call {
@@ -613,7 +704,9 @@ input {
   pointer-events: none;
   transition: all 0.3s;
   z-index: 100;
-  white-space: nowrap;
+  max-width: calc(100vw - 32px);
+  text-align: center;
+  line-height: 1.4;
 }
 
 .toast.show {

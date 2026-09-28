@@ -1,21 +1,30 @@
-const socket = io();
+'use strict';
 
-// DOM elements
+const socket = io({ reconnectionDelay: 1000, reconnectionDelayMax: 5000 });
+
+// ============ DOM elements ============
 const lobby = document.getElementById('lobby');
 const callArea = document.getElementById('callArea');
 const roomInput = document.getElementById('roomInput');
 const startCallBtn = document.getElementById('startCallBtn');
 const joinBtn = document.getElementById('joinBtn');
 const lobbyMsg = document.getElementById('lobbyMsg');
+const startView = document.getElementById('startView');
+const inviteView = document.getElementById('inviteView');
+const acceptCallBtn = document.getElementById('acceptCallBtn');
 
 const waitingOverlay = document.getElementById('waitingOverlay');
-const waitingTitle = document.getElementById('waitingTitle');
 const shareLinkInput = document.getElementById('shareLink');
 const shareCopyBtn = document.getElementById('shareCopyBtn');
 const whatsappShareBtn = document.getElementById('whatsappShareBtn');
 
 const localVideo = document.getElementById('localVideo');
+const localWrapper = document.getElementById('localWrapper');
+const localPlaceholder = document.getElementById('localPlaceholder');
+const flipBtn = document.getElementById('flipBtn');
 const remoteVideo = document.getElementById('remoteVideo');
+const remotePlaceholder = document.getElementById('remotePlaceholder');
+const remoteMuteBadge = document.getElementById('remoteMuteBadge');
 
 const muteBtn = document.getElementById('muteBtn');
 const cameraBtn = document.getElementById('cameraBtn');
@@ -27,6 +36,8 @@ const statusText = document.getElementById('statusText');
 const statusDot = document.getElementById('statusDot');
 const timerEl = document.getElementById('timer');
 const toast = document.getElementById('toast');
+const micIconEl = document.getElementById('micIcon');
+const camIconEl = document.getElementById('camIcon');
 
 // SVG icons for toggle states
 const ICONS = {
@@ -36,18 +47,31 @@ const ICONS = {
   camOff: '<path d="M21 6.5l-4 4V7c0-.55-.45-1-1-1H9.82L21 17.18V6.5zM3.27 2L2 3.27 4.73 6H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.21 0 .39-.08.55-.18L19.73 21 21 19.73 3.27 2z"/>'
 };
 
-const micIconEl = document.getElementById('micIcon');
-const camIconEl = document.getElementById('camIcon');
-
-// State
-let localStream = null;
-let cameraStream = null;
+// ============ State ============
+let localStream = null;      // camera + mic (or mic only when no camera)
+let screenStream = null;     // active screen share, if any
 let peerConnection = null;
-let otherUserId = null;
+let videoSender = null;      // RTCRtpSender carrying our camera/screen
+let otherUserId = null;      // socket id of the other side
+let otherPeerId = null;      // stable id of the other side
 let currentRoom = null;
+let joined = false;          // joined the room at least once (rejoin on reconnect)
 let isSharingScreen = false;
+let audioOnly = false;
+let facingMode = 'user';
+let flipping = false;
+let negotiationEnabled = false;
 let callStartTime = null;
 let timerInterval = null;
+let pendingCandidates = [];
+let recoverTimer = null;
+let lastJoinAt = 0;
+let wakeLock = null;
+let pendingRoomId = null;
+
+// A stable id for this browser tab. Survives page reloads and network
+// drops, so the server lets us back into the same call seat.
+const myPeerId = getPeerId();
 
 // ICE servers - STUN (free) + TURN (free public relay servers)
 // TURN servers help when direct peer connection is blocked by firewall/NAT
@@ -83,7 +107,55 @@ const iceServers = {
   iceCandidatePoolSize: 10
 };
 
-// ============ Toast ============
+// ============ Helpers ============
+function randomId(len) {
+  // No 0/o/1/l/i so a room id can be read out over the phone without confusion
+  const alphabet = 'abcdefghjkmnpqrstuvwxyz23456789';
+  const bytes = new Uint8Array(len);
+  if (window.crypto && window.crypto.getRandomValues) {
+    window.crypto.getRandomValues(bytes);
+  } else {
+    for (let i = 0; i < len; i++) bytes[i] = Math.floor(Math.random() * 256);
+  }
+  let out = '';
+  for (let i = 0; i < len; i++) out += alphabet[bytes[i] % alphabet.length];
+  return out;
+}
+
+function getPeerId() {
+  try {
+    let id = sessionStorage.getItem('sjc-peer-id');
+    if (!id || !/^[a-z0-9_-]{6,64}$/i.test(id)) {
+      id = randomId(12);
+      sessionStorage.setItem('sjc-peer-id', id);
+    }
+    return id;
+  } catch (e) {
+    return randomId(12);
+  }
+}
+
+// Accepts a full link, "?room=xyz", or a bare room id and returns a clean id
+function extractRoomId(input) {
+  let s = String(input || '').trim();
+  if (s.includes('#')) {
+    s = s.split('#').pop();
+  } else if (/[?&]room=/.test(s)) {
+    s = s.split(/[?&]room=/).pop().split('&')[0];
+  } else if (s.includes('/')) {
+    s = s.split('/').pop();
+  }
+  try { s = decodeURIComponent(s); } catch (e) { /* keep as is */ }
+  return s.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 64);
+}
+
+function getRoomFromUrl() {
+  const hash = window.location.hash.replace('#', '').trim();
+  if (hash) return extractRoomId(hash);
+  const params = new URLSearchParams(window.location.search);
+  return extractRoomId(params.get('room') || '');
+}
+
 function showToast(message, duration = 2000) {
   toast.textContent = message;
   toast.classList.add('show');
@@ -91,42 +163,22 @@ function showToast(message, duration = 2000) {
   showToast._t = setTimeout(() => toast.classList.remove('show'), duration);
 }
 
-// ============ Auto-detect invite from URL ============
-function getRoomFromUrl() {
-  const hash = window.location.hash.replace('#', '').trim();
-  if (hash) return hash;
-  const params = new URLSearchParams(window.location.search);
-  return params.get('room');
+function setStatus(text, connected) {
+  statusText.textContent = text;
+  statusDot.classList.toggle('connected', !!connected);
 }
 
-const startView = document.getElementById('startView');
-const inviteView = document.getElementById('inviteView');
-const acceptCallBtn = document.getElementById('acceptCallBtn');
-
-let pendingRoomId = null;
-
-// Detect in-app browsers (WhatsApp, FB, Instagram) - these often block camera/mic
+// ============ In-app browser detection ============
+// WhatsApp / Facebook / Instagram open links inside their own mini browser
+// (Android WebView, iOS WKWebView) where camera/mic usually do not work.
 function isInAppBrowser() {
-  const ua = navigator.userAgent;
-  const tests = [
-    /WhatsApp/i,
-    /Instagram/i,
-    /FBAN|FBAV|FB_IAB/i,    // Facebook in-app
-    /Line/i,
-    /MicroMessenger/i,       // WeChat
-    /; wv\)/,                // Android WebView
-    /\(iPhone.*Mobile.*Safari/i  // doesn't have CriOS/FxiOS - probably in-app
-  ];
-  // Actual Safari has "Version" and "Safari"
-  if (/iPhone/i.test(ua) && !/CriOS|FxiOS/.test(ua) && !/Version.*Safari/.test(ua)) {
+  const ua = navigator.userAgent || '';
+  if (/WhatsApp|FBAN|FBAV|FB_IAB|Instagram|MicroMessenger|\bLine\/|; wv\)/i.test(ua)) return true;
+  // iOS WKWebView: has "iPhone" but neither Safari's "Version/x Safari" nor a known browser marker
+  if (/iPhone|iPad/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPT\//.test(ua) && !/Version\/[\d.]+.*Safari/.test(ua)) {
     return true;
   }
-  for (const re of tests) {
-    if (re.test(ua) && !(/CriOS|FxiOS|Version.*Safari/.test(ua) && !/FBAN|FBAV|FB_IAB|Instagram|WhatsApp/i.test(ua))) {
-      // simplified test
-    }
-  }
-  return /WhatsApp|FBAN|FBAV|FB_IAB|Instagram|Line|MicroMessenger|; wv\)/i.test(ua);
+  return false;
 }
 
 function showInAppBrowserWarning() {
@@ -136,7 +188,7 @@ function showInAppBrowserWarning() {
     <div class="warning-card">
       <div class="warning-icon">⚠️</div>
       <h2>Browser बदलें</h2>
-      <p>आप अभी <strong>WhatsApp के अंदर के browser</strong> में हैं।</p>
+      <p>आप अभी किसी <strong>app के अंदर वाले browser</strong> (WhatsApp/Facebook/Instagram) में हैं।</p>
       <p>इसमें Camera/Mic काम नहीं करता।</p>
       <div class="warning-steps">
         <p><strong>क्या करें:</strong></p>
@@ -159,10 +211,10 @@ function showInAppBrowserWarning() {
   });
 }
 
+// ============ Page load ============
 window.addEventListener('load', () => {
   const roomFromUrl = getRoomFromUrl();
 
-  // If in WhatsApp/Instagram browser and trying to join, show warning
   if (roomFromUrl && isInAppBrowser()) {
     showInAppBrowserWarning();
     return;
@@ -177,200 +229,404 @@ window.addEventListener('load', () => {
     startView.classList.remove('hidden');
     inviteView.classList.add('hidden');
   }
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+    screenBtn.classList.add('unsupported');
+  }
 });
 
 acceptCallBtn.addEventListener('click', () => {
-  if (pendingRoomId) {
-    startCall(pendingRoomId);
-  }
+  if (pendingRoomId) startCall(pendingRoomId);
 });
 
-// ============ Buttons ============
 startCallBtn.addEventListener('click', () => {
-  const roomId = 'call-' + Math.random().toString(36).substring(2, 8);
-  startCall(roomId);
+  startCall('call-' + randomId(8));
 });
 
 joinBtn.addEventListener('click', () => {
-  let input = roomInput.value.trim();
-  if (!input) {
-    lobbyMsg.textContent = 'कृपया link या Room ID डालें';
+  const roomId = extractRoomId(roomInput.value);
+  if (!roomId) {
+    lobbyMsg.textContent = 'कृपया सही link या Room ID डालें';
     return;
   }
-  // Extract room ID from full URL if pasted
-  if (input.includes('#')) {
-    input = input.split('#').pop();
-  } else if (input.includes('?room=')) {
-    input = input.split('?room=').pop().split('&')[0];
-  } else if (input.includes('/')) {
-    input = input.split('/').pop();
-  }
-  startCall(input);
+  startCall(roomId);
 });
 
 roomInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') joinBtn.click();
 });
 
+// ============ Local media ============
+async function getLocalMedia() {
+  const audio = { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
+  const video = { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } };
+  try {
+    audioOnly = false;
+    return await navigator.mediaDevices.getUserMedia({ video, audio });
+  } catch (err) {
+    // No camera / camera busy / camera denied but mic allowed -> still join with voice
+    const retryAudioOnly = ['NotFoundError', 'DevicesNotFoundError', 'NotReadableError', 'TrackStartError',
+      'OverconstrainedError', 'ConstraintNotSatisfiedError', 'AbortError', 'NotAllowedError'];
+    if (!retryAudioOnly.includes(err.name)) throw err;
+    const stream = await navigator.mediaDevices.getUserMedia({ audio });
+    audioOnly = true;
+    showToast('Camera नहीं मिला, सिर्फ़ आवाज़ से जुड़ रहे हैं', 4000);
+    return stream;
+  }
+}
+
+function updateLocalPreview() {
+  const hasVideo = !!(localStream && localStream.getVideoTracks().length);
+  localPlaceholder.classList.toggle('hidden', hasVideo || isSharingScreen);
+  localWrapper.classList.toggle('mirror', !isSharingScreen && facingMode === 'user');
+  cameraBtn.classList.toggle('unsupported', !hasVideo);
+}
+
+async function checkCameraFlipAvailable() {
+  try {
+    if (!navigator.mediaDevices.enumerateDevices) return;
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cams = devices.filter((d) => d.kind === 'videoinput');
+    flipBtn.classList.toggle('hidden', audioOnly || cams.length < 2);
+  } catch (e) { /* ignore */ }
+}
+
+if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+  navigator.mediaDevices.addEventListener('devicechange', () => {
+    if (localStream) checkCameraFlipAvailable();
+  });
+}
+
 // ============ Start Call ============
 async function startCall(roomId) {
+  roomId = extractRoomId(roomId);
+  if (!roomId) {
+    lobbyMsg.textContent = 'कृपया सही link या Room ID डालें';
+    return;
+  }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    lobbyMsg.textContent = 'यह browser video call support नहीं करता। कृपया Chrome या Safari में खोलें।';
+    return;
+  }
   try {
     lobbyMsg.textContent = '';
     setStatus('Camera तैयार कर रहे हैं...', false);
 
-    localStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'user' },
-      audio: true
-    });
-    cameraStream = localStream;
+    localStream = await getLocalMedia();
     localVideo.srcObject = localStream;
+    updateLocalPreview();
+    checkCameraFlipAvailable();
 
     currentRoom = roomId;
-    window.location.hash = roomId;
+    history.replaceState(null, '', window.location.pathname + '#' + roomId);
+    shareLinkInput.value = window.location.origin + window.location.pathname + '#' + roomId;
 
-    // Setup share link
-    const link = window.location.origin + window.location.pathname + '#' + roomId;
-    shareLinkInput.value = link;
-
-    // Show call screen with waiting overlay
     lobby.classList.add('hidden');
     callArea.classList.remove('hidden');
     waitingOverlay.classList.remove('hidden');
 
-    setStatus('Room में जुड़ रहे हैं...', false);
-    socket.emit('join-room', roomId);
+    if (socket.connected) {
+      joinRoom();
+    } else {
+      setStatus('Server से जुड़ रहे हैं...', false);
+      socket.connect();
+    }
   } catch (err) {
     let msg = 'Camera/Mic access नहीं मिला';
-    if (err.name === 'NotAllowedError') msg = 'Camera/Mic की permission देनी होगी';
-    if (err.name === 'NotFoundError') msg = 'Camera या Microphone नहीं मिला';
+    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+      msg = 'Camera/Mic की permission नहीं मिली। Address bar में lock 🔒 या camera icon पर tap करके "Allow" करें, फिर दोबारा कोशिश करें।';
+    } else if (err.name === 'NotFoundError') {
+      msg = 'Camera या Microphone नहीं मिला';
+    } else if (err.name === 'NotReadableError') {
+      msg = 'Camera/Mic कोई और app इस्तेमाल कर रहा है। उसे बंद करके दोबारा कोशिश करें।';
+    } else if (window.isSecureContext === false) {
+      msg = 'Video call के लिए https link ज़रूरी है';
+    }
     lobbyMsg.textContent = msg;
     console.error(err);
   }
 }
 
-// ============ Socket events ============
-socket.on('room-full', () => {
-  showToast('यह Call पहले से full है (2 लोग ही allowed हैं)', 3000);
-  endCall(true);
+function joinRoom() {
+  if (!currentRoom || !socket.connected) return;
+  const now = Date.now();
+  if (now - lastJoinAt < 1500) return; // avoid double joins
+  lastJoinAt = now;
+
+  setStatus(joined ? 'दोबारा जुड़ रहे हैं...' : 'Room में जुड़ रहे हैं...', false);
+  socket.emit('join-room', currentRoom, myPeerId, (res) => {
+    if (!res || !res.ok) {
+      if (res && res.error === 'full') {
+        leaveToLobby('यह call पहले से चल रही है (सिर्फ़ 2 लोग जुड़ सकते हैं)। नई call शुरू करें या सही link माँगें।');
+      } else {
+        leaveToLobby('Room से जुड़ नहीं पाए। दोबारा कोशिश करें।');
+      }
+      return;
+    }
+    joined = true;
+    if (!otherUserId) setStatus('दूसरे का इंतज़ार...', false);
+  });
+}
+
+// ============ Socket lifecycle ============
+socket.on('connect', () => {
+  if (!currentRoom) return;
+  if (joined) {
+    // Came back after a network drop: start the peer connection fresh
+    showToast('Server से दोबारा जुड़ गए');
+    resetPeer();
+  }
+  lastJoinAt = 0;
+  joinRoom();
 });
 
-socket.on('other-user', async (userId) => {
-  otherUserId = userId;
-  waitingOverlay.classList.add('hidden');
-  setStatus('जुड़ रहे हैं...', false);
-  await createPeerConnection();
-  localStream.getTracks().forEach((t) => peerConnection.addTrack(t, localStream));
-  const offer = await peerConnection.createOffer();
-  await peerConnection.setLocalDescription(offer);
-  socket.emit('offer', { target: userId, offer });
+socket.on('disconnect', () => {
+  if (currentRoom) setStatus('Server से संपर्क टूटा, जोड़ रहे हैं...', false);
 });
 
-socket.on('user-joined', async (userId) => {
-  otherUserId = userId;
+socket.on('connect_error', () => {
+  if (currentRoom) setStatus('Server से जुड़ नहीं पा रहे...', false);
+});
+
+socket.on('kicked', () => {
+  leaveToLobby('यह call किसी दूसरी tab या device में खुल गई है।');
+});
+
+// ============ Signaling ============
+socket.on('other-user', async ({ socketId, peerId }) => {
+  // We are the newcomer -> we send the offer
+  resetPeer();
+  otherUserId = socketId;
+  otherPeerId = peerId;
   waitingOverlay.classList.add('hidden');
   setStatus('जुड़ रहे हैं...', false);
-  await createPeerConnection();
-  localStream.getTracks().forEach((t) => peerConnection.addTrack(t, localStream));
+  createPeerConnection();
+  addLocalTracks();
+  try {
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    socket.emit('offer', { target: socketId, offer });
+  } catch (err) {
+    console.error('offer failed', err);
+  }
+});
+
+socket.on('user-joined', ({ socketId, peerId }) => {
+  // Someone joined us -> wait for their offer
+  resetPeer();
+  otherUserId = socketId;
+  otherPeerId = peerId;
+  waitingOverlay.classList.add('hidden');
+  setStatus('जुड़ रहे हैं...', false);
+  createPeerConnection();
+  addLocalTracks();
 });
 
 socket.on('offer', async ({ from, offer }) => {
   otherUserId = from;
   waitingOverlay.classList.add('hidden');
   if (!peerConnection) {
-    await createPeerConnection();
-    localStream.getTracks().forEach((t) => peerConnection.addTrack(t, localStream));
+    createPeerConnection();
+    addLocalTracks();
   }
-  await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-  const answer = await peerConnection.createAnswer();
-  await peerConnection.setLocalDescription(answer);
-  socket.emit('answer', { target: from, answer });
+  try {
+    if (peerConnection.signalingState !== 'stable') {
+      await peerConnection.setLocalDescription({ type: 'rollback' });
+    }
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+    await flushCandidates();
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+    socket.emit('answer', { target: from, answer });
+  } catch (err) {
+    console.error('answer failed', err);
+  }
 });
 
 socket.on('answer', async ({ answer }) => {
-  await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+  if (!peerConnection || peerConnection.signalingState !== 'have-local-offer') return;
+  try {
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+    await flushCandidates();
+  } catch (err) {
+    console.error('setRemoteDescription(answer) failed', err);
+  }
 });
 
 socket.on('ice-candidate', async ({ candidate }) => {
-  try {
-    if (peerConnection && candidate) {
+  if (!candidate) return;
+  if (peerConnection && peerConnection.remoteDescription) {
+    try {
       await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+    } catch (err) {
+      console.warn('addIceCandidate failed', err);
     }
-  } catch (err) {
-    console.error(err);
+  } else {
+    // Candidates can arrive before the offer/answer is applied - keep them
+    pendingCandidates.push(candidate);
   }
 });
+
+socket.on('media-state', (state) => updateRemoteState(state));
 
 socket.on('user-left', () => {
   showToast('दूसरा व्यक्ति call से चला गया');
-  if (peerConnection) {
-    peerConnection.close();
-    peerConnection = null;
-  }
-  remoteVideo.srcObject = null;
+  resetPeer();
   otherUserId = null;
+  otherPeerId = null;
+  updateRemoteState({ audio: true, video: true, screen: false });
   waitingOverlay.classList.remove('hidden');
-  setStatus('इंतज़ार...', false);
+  setStatus('दूसरे का इंतज़ार...', false);
   stopTimer();
+  releaseWakeLock();
 });
 
-// ============ Peer Connection ============
-async function createPeerConnection() {
-  peerConnection = new RTCPeerConnection(iceServers);
+async function flushCandidates() {
+  const list = pendingCandidates;
+  pendingCandidates = [];
+  for (const c of list) {
+    try {
+      await peerConnection.addIceCandidate(new RTCIceCandidate(c));
+    } catch (err) {
+      console.warn('addIceCandidate (queued) failed', err);
+    }
+  }
+}
 
-  peerConnection.onicecandidate = (event) => {
+// ============ Peer Connection ============
+function createPeerConnection() {
+  const pc = new RTCPeerConnection(iceServers);
+  peerConnection = pc;
+  videoSender = null;
+  negotiationEnabled = false;
+  pendingCandidates = [];
+
+  pc.onicecandidate = (event) => {
     if (event.candidate && otherUserId) {
-      socket.emit('ice-candidate', {
-        target: otherUserId,
-        candidate: event.candidate
-      });
+      socket.emit('ice-candidate', { target: otherUserId, candidate: event.candidate });
     }
   };
 
-  peerConnection.ontrack = (event) => {
-    console.log('Received remote track:', event.track.kind);
+  pc.ontrack = (event) => {
+    if (pc !== peerConnection) return;
     if (event.streams && event.streams[0]) {
       remoteVideo.srcObject = event.streams[0];
     } else {
-      // Some browsers fire ontrack without streams - build one
-      if (!remoteVideo.srcObject) {
-        remoteVideo.srcObject = new MediaStream();
-      }
+      if (!remoteVideo.srcObject) remoteVideo.srcObject = new MediaStream();
       remoteVideo.srcObject.addTrack(event.track);
     }
-    // Try to play (autoplay may be blocked on some browsers)
-    remoteVideo.play().catch(err => {
+    remoteVideo.play().catch((err) => {
       console.warn('Remote video play failed:', err);
       showToast('Video दिखाने के लिए screen पर tap करें');
     });
     onConnected();
   };
 
-  peerConnection.oniceconnectionstatechange = () => {
-    console.log('ICE state:', peerConnection.iceConnectionState);
-    switch (peerConnection.iceConnectionState) {
+  pc.onnegotiationneeded = async () => {
+    // Only used for changes made after the call is up (e.g. an audio-only
+    // user starting a screen share). Initial offers are driven by the server.
+    if (pc !== peerConnection || !negotiationEnabled || pc.signalingState !== 'stable' || !otherUserId) return;
+    try {
+      const offer = await pc.createOffer();
+      if (pc.signalingState !== 'stable') return;
+      await pc.setLocalDescription(offer);
+      socket.emit('offer', { target: otherUserId, offer });
+    } catch (err) {
+      console.error('renegotiation failed', err);
+    }
+  };
+
+  pc.oniceconnectionstatechange = () => {
+    if (pc !== peerConnection) return;
+    console.log('ICE state:', pc.iceConnectionState);
+    switch (pc.iceConnectionState) {
       case 'checking':
         setStatus('Connection बना रहे हैं...', false);
         break;
       case 'connected':
       case 'completed':
+        clearRecoverTimer();
         onConnected();
         break;
-      case 'failed':
-        setStatus('Connection नहीं बन सकी', false);
-        showToast('Connection fail - दूसरे network पर try करें');
-        break;
       case 'disconnected':
-        setStatus('Connection टूट गया', false);
+        setStatus('Connection कमज़ोर है, संभाल रहे हैं...', false);
+        scheduleRecover(5000);
+        break;
+      case 'failed':
+        setStatus('Connection टूट गया, दोबारा जोड़ रहे हैं...', false);
+        scheduleRecover(0);
         break;
     }
   };
 
-  peerConnection.onconnectionstatechange = () => {
-    console.log('Peer state:', peerConnection.connectionState);
-    if (peerConnection.connectionState === 'connected') {
-      onConnected();
-    }
+  pc.onconnectionstatechange = () => {
+    if (pc !== peerConnection) return;
+    console.log('Peer state:', pc.connectionState);
+    if (pc.connectionState === 'connected') onConnected();
+    if (pc.connectionState === 'failed') scheduleRecover(0);
   };
+}
+
+function addLocalTracks() {
+  if (!peerConnection || !localStream) return;
+  localStream.getAudioTracks().forEach((t) => peerConnection.addTrack(t, localStream));
+  const videoTrack = isSharingScreen && screenStream
+    ? screenStream.getVideoTracks()[0]
+    : localStream.getVideoTracks()[0];
+  if (videoTrack) videoSender = peerConnection.addTrack(videoTrack, localStream);
+}
+
+function resetPeer() {
+  clearRecoverTimer();
+  if (peerConnection) {
+    peerConnection.onicecandidate = null;
+    peerConnection.ontrack = null;
+    peerConnection.onnegotiationneeded = null;
+    peerConnection.oniceconnectionstatechange = null;
+    peerConnection.onconnectionstatechange = null;
+    peerConnection.close();
+    peerConnection = null;
+  }
+  videoSender = null;
+  negotiationEnabled = false;
+  pendingCandidates = [];
+  remoteVideo.srcObject = null;
+}
+
+// Try to rebuild the call when the connection is lost. The peer with the
+// smaller id goes first; the other waits so both do not rejoin at once.
+function scheduleRecover(delay) {
+  clearRecoverTimer();
+  const lead = !otherPeerId || myPeerId < otherPeerId;
+  recoverTimer = setTimeout(() => {
+    recoverTimer = null;
+    const st = peerConnection && peerConnection.iceConnectionState;
+    if (st === 'connected' || st === 'completed') return;
+    recoverConnection();
+  }, delay + (lead ? 0 : 6000));
+}
+
+function clearRecoverTimer() {
+  if (recoverTimer) clearTimeout(recoverTimer);
+  recoverTimer = null;
+}
+
+function recoverConnection() {
+  if (!currentRoom || !otherUserId) return;
+  if (!socket.connected) return; // the 'connect' handler will rejoin
+  showToast('Call दोबारा जोड़ रहे हैं...');
+  resetPeer();
+  lastJoinAt = 0;
+  joinRoom();
+}
+
+function onConnected() {
+  setStatus('जुड़े हैं', true);
+  waitingOverlay.classList.add('hidden');
+  if (!callStartTime) startTimer();
+  negotiationEnabled = true;
+  requestWakeLock();
+  sendMediaState();
 }
 
 // User tap fallback for autoplay
@@ -378,23 +634,50 @@ document.addEventListener('click', () => {
   if (remoteVideo.srcObject && remoteVideo.paused) {
     remoteVideo.play().catch(() => {});
   }
-}, { once: false });
+});
 
-function onConnected() {
-  setStatus('जुड़े हैं', true);
-  if (!callStartTime) startTimer();
+// ============ Media state (mute / camera off / screen) ============
+function sendMediaState() {
+  if (!otherUserId || !socket.connected || !localStream) return;
+  const a = localStream.getAudioTracks()[0];
+  const v = localStream.getVideoTracks()[0];
+  socket.emit('media-state', {
+    target: otherUserId,
+    audio: !!(a && a.enabled),
+    video: isSharingScreen || !!(v && v.enabled),
+    screen: isSharingScreen
+  });
 }
 
-// ============ Status & Timer ============
-function setStatus(text, connected) {
-  statusText.textContent = text;
-  if (connected) {
-    statusDot.classList.add('connected');
-  } else {
-    statusDot.classList.remove('connected');
+function updateRemoteState(state) {
+  if (!state) return;
+  remoteMuteBadge.classList.toggle('hidden', state.audio !== false);
+  remotePlaceholder.classList.toggle('hidden', state.video !== false);
+  remoteVideo.classList.toggle('contain', !!state.screen);
+}
+
+// ============ Keep the screen awake during a call ============
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator && !wakeLock) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    }
+  } catch (e) { /* not critical */ }
+}
+
+function releaseWakeLock() {
+  if (wakeLock) {
+    wakeLock.release().catch(() => {});
+    wakeLock = null;
   }
 }
 
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && currentRoom && otherUserId) requestWakeLock();
+});
+
+// ============ Timer ============
 function startTimer() {
   callStartTime = Date.now();
   timerInterval = setInterval(() => {
@@ -418,123 +701,162 @@ muteBtn.addEventListener('click', () => {
   const track = localStream.getAudioTracks()[0];
   if (!track) return;
   track.enabled = !track.enabled;
-  if (track.enabled) {
-    muteBtn.classList.remove('off');
-    micIconEl.innerHTML = ICONS.micOn;
-    showToast('Mic ON');
-  } else {
-    muteBtn.classList.add('off');
-    micIconEl.innerHTML = ICONS.micOff;
-    showToast('Mic OFF');
-  }
+  muteBtn.classList.toggle('off', !track.enabled);
+  micIconEl.innerHTML = track.enabled ? ICONS.micOn : ICONS.micOff;
+  showToast(track.enabled ? 'Mic ON' : 'Mic OFF');
+  sendMediaState();
 });
 
 // ============ Camera toggle ============
 cameraBtn.addEventListener('click', () => {
-  if (!cameraStream) return;
-  const track = cameraStream.getVideoTracks()[0];
-  if (!track) return;
-  track.enabled = !track.enabled;
-  if (track.enabled) {
-    cameraBtn.classList.remove('off');
-    camIconEl.innerHTML = ICONS.camOn;
-    showToast('Camera ON');
-  } else {
-    cameraBtn.classList.add('off');
-    camIconEl.innerHTML = ICONS.camOff;
-    showToast('Camera OFF');
+  if (!localStream) return;
+  const track = localStream.getVideoTracks()[0];
+  if (!track) {
+    showToast('Camera उपलब्ध नहीं है');
+    return;
   }
+  track.enabled = !track.enabled;
+  cameraBtn.classList.toggle('off', !track.enabled);
+  camIconEl.innerHTML = track.enabled ? ICONS.camOn : ICONS.camOff;
+  showToast(track.enabled ? 'Camera ON' : 'Camera OFF');
+  sendMediaState();
 });
+
+// ============ Camera flip (front / back) ============
+flipBtn.addEventListener('click', flipCamera);
+
+async function flipCamera() {
+  if (!localStream || audioOnly || flipping) return;
+  flipping = true;
+  const oldTrack = localStream.getVideoTracks()[0];
+  const wantFacing = facingMode === 'user' ? 'environment' : 'user';
+  const size = { width: { ideal: 1280 }, height: { ideal: 720 } };
+  try {
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: Object.assign({ facingMode: { exact: wantFacing } }, size), audio: false });
+    } catch (e) {
+      // Desktop / unusual phones: no facingMode - just move to the next camera
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cams = devices.filter((d) => d.kind === 'videoinput');
+      const currentId = oldTrack && oldTrack.getSettings().deviceId;
+      const idx = cams.findIndex((d) => d.deviceId === currentId);
+      const next = cams[(idx + 1) % cams.length];
+      if (!next || next.deviceId === currentId) throw e;
+      stream = await navigator.mediaDevices.getUserMedia({ video: Object.assign({ deviceId: { exact: next.deviceId } }, size), audio: false });
+    }
+    const newTrack = stream.getVideoTracks()[0];
+    const settings = newTrack.getSettings ? newTrack.getSettings() : {};
+    facingMode = settings.facingMode || wantFacing;
+    if (oldTrack) {
+      newTrack.enabled = oldTrack.enabled;
+      localStream.removeTrack(oldTrack);
+      oldTrack.stop();
+    }
+    localStream.addTrack(newTrack);
+    if (!isSharingScreen) {
+      if (videoSender) await videoSender.replaceTrack(newTrack);
+      localVideo.srcObject = localStream;
+    }
+    updateLocalPreview();
+    showToast(facingMode === 'environment' ? 'पीछे का camera' : 'सामने का camera');
+  } catch (err) {
+    console.error('flip failed', err);
+    showToast('Camera बदल नहीं सका');
+  }
+  flipping = false;
+}
 
 // ============ Screen share ============
 screenBtn.addEventListener('click', async () => {
-  if (!peerConnection) {
-    showToast('पहले कोई जुड़े');
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+    showToast('Screen share सिर्फ़ computer/laptop के browser में चलता है', 3500);
+    return;
+  }
+  if (isSharingScreen) {
+    stopScreenShare();
     return;
   }
   try {
-    if (!isSharingScreen) {
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: false
-      });
-      const track = screenStream.getVideoTracks()[0];
-      const sender = peerConnection.getSenders().find((s) => s.track && s.track.kind === 'video');
-      if (sender) await sender.replaceTrack(track);
-      localVideo.srcObject = screenStream;
-      isSharingScreen = true;
-      screenBtn.classList.add('active');
-      showToast('Screen share शुरू');
-      track.onended = () => stopScreenShare();
-    } else {
-      stopScreenShare();
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      video: { frameRate: { ideal: 15 } },
+      audio: false
+    });
+    const track = stream.getVideoTracks()[0];
+    screenStream = stream;
+    isSharingScreen = true;
+    if (peerConnection) {
+      if (videoSender) {
+        await videoSender.replaceTrack(track);
+      } else if (localStream) {
+        // Audio-only user: add a video sender (triggers renegotiation)
+        videoSender = peerConnection.addTrack(track, localStream);
+      }
     }
+    localVideo.srcObject = stream;
+    updateLocalPreview();
+    screenBtn.classList.add('active');
+    showToast('Screen share शुरू');
+    track.onended = () => stopScreenShare();
+    sendMediaState();
   } catch (err) {
     console.error(err);
+    if (err.name !== 'NotAllowedError') showToast('Screen share शुरू नहीं हो सका');
   }
 });
 
-async function stopScreenShare() {
-  if (!peerConnection || !cameraStream) return;
-  const track = cameraStream.getVideoTracks()[0];
-  const sender = peerConnection.getSenders().find((s) => s.track && s.track.kind === 'video');
-  if (sender && track) await sender.replaceTrack(track);
-  localVideo.srcObject = cameraStream;
+async function stopScreenShare(quiet) {
+  if (!isSharingScreen) return;
   isSharingScreen = false;
+  if (screenStream) {
+    // Stop the capture so the browser's "sharing your screen" bar goes away
+    screenStream.getTracks().forEach((t) => t.stop());
+    screenStream = null;
+  }
+  const camTrack = localStream ? localStream.getVideoTracks()[0] : null;
+  if (videoSender) {
+    try { await videoSender.replaceTrack(camTrack || null); } catch (e) { console.warn(e); }
+  }
+  localVideo.srcObject = localStream;
+  updateLocalPreview();
   screenBtn.classList.remove('active');
-  showToast('Screen share बंद');
+  if (!quiet) showToast('Screen share बंद');
+  sendMediaState();
 }
 
 // ============ Invite (share link via WhatsApp / native share) ============
+const INVITE_TEXT = 'नमस्ते 🙏 मेरे साथ video call पर बात कीजिए। नीचे दिए link पर click करें:\n';
+
 inviteBtn.addEventListener('click', async () => {
   const link = shareLinkInput.value;
-  const shareText = 'नमस्ते 🙏 मेरे साथ video call पर बात कीजिए। नीचे link पर click करें:\n' + link;
-
-  // Try native share API first (mobile phones, some desktops)
   if (navigator.share) {
     try {
-      await navigator.share({
-        title: 'Shastri Ji Connect',
-        text: 'मेरे साथ video call पर बात कीजिए',
-        url: link
-      });
+      await navigator.share({ title: 'Shastri Ji Connect', text: INVITE_TEXT.trim(), url: link });
       return;
     } catch (err) {
-      // User cancelled - that's fine
       if (err.name === 'AbortError') return;
     }
   }
-
-  // Fallback: copy to clipboard + open WhatsApp share
   try {
     await navigator.clipboard.writeText(link);
     showToast('Link copy हो गया! WhatsApp खुल रहा है...');
-  } catch (err) {}
-
-  // Make sure the overlay is visible so user can also see the link
+  } catch (err) { /* ignore */ }
   waitingOverlay.classList.remove('hidden');
-
-  // Open WhatsApp share in new tab
   setTimeout(() => {
-    window.open('https://wa.me/?text=' + encodeURIComponent(shareText), '_blank');
+    window.open('https://wa.me/?text=' + encodeURIComponent(INVITE_TEXT + link), '_blank');
   }, 300);
 });
 
-// Tap on remote area to close waiting overlay
+// Tap on the backdrop to close the waiting overlay once someone is connected
 waitingOverlay.addEventListener('click', (e) => {
-  // Only close if clicked on the overlay backdrop, not on content
-  if (e.target === waitingOverlay && otherUserId) {
-    waitingOverlay.classList.add('hidden');
-  }
+  if (e.target === waitingOverlay && otherUserId) waitingOverlay.classList.add('hidden');
 });
 
-// ============ Copy / Share link ============
 shareCopyBtn.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(shareLinkInput.value);
     showToast('Link copy हो गया!');
   } catch (err) {
-    // Fallback
     shareLinkInput.select();
     document.execCommand('copy');
     showToast('Link copy हो गया!');
@@ -542,44 +864,54 @@ shareCopyBtn.addEventListener('click', async () => {
 });
 
 whatsappShareBtn.addEventListener('click', () => {
-  const text = encodeURIComponent('Mujhse video call par baat karein:\n' + shareLinkInput.value);
-  window.open('https://wa.me/?text=' + text, '_blank');
+  window.open('https://wa.me/?text=' + encodeURIComponent(INVITE_TEXT + shareLinkInput.value), '_blank');
 });
 
-// Use native share API if available
-whatsappShareBtn.addEventListener('contextmenu', async (e) => {
-  e.preventDefault();
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: 'Shastri Ji Connect',
-        text: 'Mujhse video call par baat karein',
-        url: shareLinkInput.value
-      });
-    } catch (err) {}
-  }
+// ============ End call / leave ============
+hangupBtn.addEventListener('click', () => {
+  if (socket.connected) socket.emit('leave-room');
+  leaveToLobby('Call बंद हो गई।');
 });
 
-// ============ End call ============
-hangupBtn.addEventListener('click', () => endCall(false));
-
-function endCall(silent) {
-  if (peerConnection) {
-    peerConnection.close();
-    peerConnection = null;
-  }
+function leaveToLobby(message) {
+  resetPeer();
+  stopTimer();
+  releaseWakeLock();
+  if (isSharingScreen) stopScreenShare(true);
   if (localStream) {
     localStream.getTracks().forEach((t) => t.stop());
     localStream = null;
   }
-  if (cameraStream && cameraStream !== localStream) {
-    cameraStream.getTracks().forEach((t) => t.stop());
-    cameraStream = null;
-  }
-  socket.disconnect();
-  stopTimer();
-  if (!silent) {
-    window.location.hash = '';
-    window.location.reload();
-  }
+  localVideo.srcObject = null;
+  remoteVideo.srcObject = null;
+  currentRoom = null;
+  joined = false;
+  otherUserId = null;
+  otherPeerId = null;
+  pendingRoomId = null;
+  audioOnly = false;
+  facingMode = 'user';
+
+  // Reset control states
+  muteBtn.classList.remove('off');
+  cameraBtn.classList.remove('off', 'unsupported');
+  micIconEl.innerHTML = ICONS.micOn;
+  camIconEl.innerHTML = ICONS.camOn;
+  screenBtn.classList.remove('active');
+  flipBtn.classList.add('hidden');
+  updateRemoteState({ audio: true, video: true, screen: false });
+  waitingOverlay.classList.remove('hidden');
+  setStatus('जुड़ रहे हैं...', false);
+
+  history.replaceState(null, '', window.location.pathname);
+  callArea.classList.add('hidden');
+  lobby.classList.remove('hidden');
+  inviteView.classList.add('hidden');
+  startView.classList.remove('hidden');
+  roomInput.value = '';
+  lobbyMsg.textContent = message || '';
 }
+
+window.addEventListener('beforeunload', () => {
+  if (currentRoom && socket.connected) socket.emit('leave-room');
+});
